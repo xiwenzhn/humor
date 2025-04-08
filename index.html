@@ -74,7 +74,7 @@
         correct: ["A", "D"]
       },
       {
-        text: " Someone tries to small talk. Your reaction:",
+        text: "Someone tries to small talk. Your reaction:",
         options: [
           "A) Respond using only facts",
           "B) Start folding a napkin into a paper swan",
@@ -84,11 +84,11 @@
         correct: ["A", "C"]
       },
       {
-        text: " A friend texts “you okay?” but you were. Now you’re not sure. You:",
+        text: "A friend texts “you okay?” but you were. Now you’re not sure. You:",
         options: [
           "A) Accuse them",
           "B) Say “yeah, all good!” with one too many exclamation marks.",
-          "C) Reply with a rhetorical question,“you okay??” ",
+          "C) Reply with a rhetorical question, “you okay??”",
           "D) Ignore it and immediately start spiraling"
         ],
         correct: ["A", "C"]
@@ -143,7 +143,7 @@
 
     function setup() {
       createCanvas(windowWidth, windowHeight);
-      // Set font to Arial Rounded MT Bold (20px for answers; question text will be sized separately).
+      // Set font to Arial Rounded MT Bold (20px for answers; question text size will be adjusted separately).
       textFont("Arial Rounded MT Bold", 20);
       
       // Generate more scattered dots.
@@ -171,9 +171,9 @@
       bgLayer.noStroke();
       bgLayer.rect(0, 0, width, height);
 
-      // Draw all scattered dots.
+      // Draw all scattered dots (set to grey).
       bgLayer.noStroke();
-      bgLayer.fill(50);
+      bgLayer.fill(128); // Grey dots
       for (let d of dots) {
         let dx = sin(frameCount * 0.05 + d.x * 0.01) * d.wiggle;
         let dy = cos(frameCount * 0.05 + d.y * 0.01) * d.wiggle;
@@ -200,13 +200,13 @@
       // Render the background layer onto the main canvas.
       image(bgLayer, 0, 0);
 
-      // Draw the centered question text (larger font).
+      // Draw the centered question text (bigger font).
       textSize(26);
       textAlign(CENTER, CENTER);
       fill(0);
       let q = questions[currentQuestion];
       // Center the question text in a bounding box.
-      text(q.text, width/2 - (width*0.6)/2, height*0.15, width*0.6, 200);
+      text(q.text, width/2 - (width * 0.6)/2, height*0.15, width*0.6, 200);
 
       // Draw answer options below the question.
       textSize(20);
@@ -391,7 +391,7 @@
         dots.push({ x, y, wiggle: random(0.5, 2) });
       }
       
-      // Reset connections with the first dot.
+      // Reset connections starting from the first dot.
       connected = [{ index: 0, correct: true }];
     }
 
@@ -414,7 +414,7 @@
     }
 
     function showFinalResult() {
-      // Overlay a semi-transparent rectangle in the center (so the dotted background is visible).
+      // Overlay a semi-transparent rectangle in the center, so the dotted background is visible.
       fill(255, 255, 255, 150);
       let overlayX = width * 0.1;
       let overlayY = height * 0.3;
@@ -422,7 +422,7 @@
       let overlayH = height * 0.4;
       rect(overlayX, overlayY, overlayW, overlayH);
       
-      // Draw final result text on top of the overlay.
+      // Draw the final result text on top of the overlay.
       textSize(26);
       textAlign(CENTER, CENTER);
       fill(0);
