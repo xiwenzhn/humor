@@ -2,450 +2,181 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Emotional Compliance Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relational Values Diagram</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      /* Use Arial Rounded MT Bold */
-      font-family: "Arial Rounded MT Bold", sans-serif;
-    }
-    canvas {
-      display: block;
-    }
+    html, body { margin: 0; padding: 0; overflow: hidden; font-family: "ABCDiatypeCondensed-Regular-Trial", sans-serif; }
+    canvas { display: block; }
   </style>
 </head>
 <body>
-  <!-- p5.js Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
   <script>
-    // Updated question set.
-    let questions = [
-      {
-        text: "You receive unexpected public praise. What do you feel?",
-        options: [
-          "A) Suspicion disguised as humility",
-          "B) A sudden urge to apologize",
-          "C) Joy, repressed until later",
-          "D) Begin weeping and confess all your past secrets aloud"
-        ],
-        correct: ["A", "C"]
-      },
-      {
-        text: "Someone compliments your personality. You feel:",
-        options: [
-          "A) Exposed",
-          "B) Grateful but itchy",
-          "C) You attempt to detach your persona and hand it to them",
-          "D) Like a poorly folded brochure"
-        ],
-        correct: ["B", "D"]
-      },
-      {
-        text: "A stranger begins crying next to you on public transit. You should:",
-        options: [
-          "A) Offer them your quietest tissue",
-          "B) Exit emotionally but stay physically",
-          "C) Begin narrating their breakdown in third person, loudly",
-          "D) Mirror their emotion, silently"
-        ],
-        correct: ["B", "D"]
-      },
-      {
-        text: "You answer a phone call from an unknown number. The voice knows your name. You feel:",
-        options: [
-          "A) Mild fear formatted as professionalism",
-          "B) Controlled curiosity",
-          "C) You immediately adopt a new name and continue the conversation",
-          "D) The need to correct their pronunciation"
-        ],
-        correct: ["A", "D"]
-      },
-      {
-        text: "During a strictly scheduled break, a cohort shares a personal trauma. You:",
-        options: [
-          "A) Timer beep means conversation is over—resume official tasks.",
-          "B) Silently hand them a departmental brochure on expectations in public spaces.",
-          "C) Initiate a hug, after glancing around for possible passersby.",
-          "D) Begin sobbing, then ask, “do you have more?”"
-        ],
-        correct: ["A", "D"]
-      },
-      {
-        text: "Someone tries to small talk. Your reaction:",
-        options: [
-          "A) Respond using only facts",
-          "B) Start folding a napkin into a paper swan",
-          "C) Walk away and pretend you didn't hear anything",
-          "D) Offer them a seat and a drink"
-        ],
-        correct: ["A", "C"]
-      },
-      {
-        text: "A friend texts “you okay?” but you were. Now you’re not sure. You:",
-        options: [
-          "A) Accuse them",
-          "B) Say “yeah, all good!” with one too many exclamation marks.",
-          "C) Reply with a rhetorical question, “you okay??”",
-          "D) Ignore it and immediately start spiraling"
-        ],
-        correct: ["A", "C"]
-      },
-      {
-        text: "A childhood memory suddenly floods back while you’re waiting in line. Your response:",
-        options: [
-          "A) Laugh uncontrollably and share it with strangers",
-          "B) Close your eyes and let the memory wash over you",
-          "C) Immediately compose a poetic tribute in your mind",
-          "D) Blurt out the memory to the person in front"
-        ],
-        correct: ["B", "C"]
-      },
-      {
-        text: "You are told to ‘bring your whole self’ to the next review. You:",
-        options: [
-          "A) Arrive with a well-formatted timeline of recent productivity.",
-          "B) Bring photos of your childhood to gesture at backstory.",
-          "C) Read a prepared statement on emotional range.",
-          "D) Drag in unresolved feelings and share them with the group."
-        ],
-        correct: ["B", "A"]
-      },
-      {
-        text: "You displayed empathy in an unapproved context. What would you do?",
-        options: [
-          "A) Attempt to disclaim your empathy as hypothetical",
-          "B) Offer a heartfelt apology with disclaimers",
-          "C) Double down and declare empathy for everyone",
-          "D) Affirm your unwavering loyalty to official guidelines"
-        ],
-        correct: ["B", "C"]
-      }
-    ];
+    // Category to sub-values mapping
+    const categories = {
+      Conditional: [
+        "Discretion",
+        "Privacy",
+        "Access and visibilities",
+        "Withholding",
+        "Susceptible to change",
+        "Ambivalence"
+      ],
+      Periodical: [
+        "Introspection",
+        "Attentions",
+        "Active participation"
+      ],
+      Incidental: [
+        "Instabilities",
+        "Chaos",
+        "Agitation",
+        "Disruptions",
+        "Confrontations",
+        "Turbulent",
+        "Improvisation"
+      ],
+      Subversive: [
+        "Resistance",
+        "Friction",
+        "Criticality",
+        "Candidness"
+      ],
+      Inherent: [
+        "Adaptive",
+        "Agile",
+        "Intuition",
+        "Independence",
+        "Ambiguity"
+      ],
+      Relational: [
+        "Dependency",
+        "Reciprocity",
+        "Intimacy",
+        "Vulnerability"
+      ],
+      Situational: [
+        "Liminality",
+        "Paradoxes",
+        "Observant"
+      ]
+    };
 
-    // Global state.
-    let currentQuestion = 0;
-    let selected = "";
-    let score = 0;
-    let complianceLevel = 100;
-    let showResult = false;
-
-    // Dot and connection variables.
+    let words = [];
     let dots = [];
-    // Each element in connected is an object: { index: <dot index>, correct: true/false }
-    let connected = [];
-    let bgLayer;
-
-    // Noise texture for the animated glow highlight.
-    let noiseTexture;
+    let connections = [];
+    let expanded = {};
 
     function setup() {
       createCanvas(windowWidth, windowHeight);
-      // Set font to Arial Rounded MT Bold (20px for answers; question text size will be adjusted separately).
-      textFont("Arial Rounded MT Bold", 20);
-      
-      // Generate more scattered dots.
-      generateDots();
-
-      // Create a separate graphics layer for the background.
-      bgLayer = createGraphics(width, height);
-
-      // Create the noise texture.
-      noiseTexture = createNoiseTexture(200, 50);
-
-      // Start with the first dot connected.
-      connected = [{ index: 0, correct: true }];
+      textFont("Arial Rounded MT Bold", 16);
+      noiseDetail(2, 0.5);
+      words = Object.keys(categories);
+      generateInitialDots();
     }
 
     function draw() {
-      // If final result should be shown, overlay the final results and exit.
-      if (showResult) {
-        showFinalResult();
-        return;
-      }
-      
-      // Update the background layer (trailing effect).
-      bgLayer.fill(250, 250, 250, 50);
-      bgLayer.noStroke();
-      bgLayer.rect(0, 0, width, height);
-
-      // Draw all scattered dots (set to grey).
-      bgLayer.noStroke();
-      bgLayer.fill(128); // Grey dots
-      for (let d of dots) {
-        let dx = sin(frameCount * 0.05 + d.x * 0.01) * d.wiggle;
-        let dy = cos(frameCount * 0.05 + d.y * 0.01) * d.wiggle;
-        bgLayer.ellipse(d.x + dx, d.y + dy, 8, 8);
-      }
-
-      // Draw connection lines between dots.
-      for (let i = 0; i < connected.length - 1; i++) {
-        // Use red stroke for a connection marked wrong.
-        if (!connected[i + 1].correct) {
-          bgLayer.stroke(255, 0, 0);
-        } else {
-          bgLayer.stroke(0);
-        }
-        let d1 = dots[connected[i].index];
-        let d2 = dots[connected[i + 1].index];
-        let dx1 = sin(frameCount * 0.05 + d1.x * 0.01) * d1.wiggle;
-        let dy1 = cos(frameCount * 0.05 + d1.y * 0.01) * d1.wiggle;
-        let dx2 = sin(frameCount * 0.05 + d2.x * 0.01) * d2.wiggle;
-        let dy2 = cos(frameCount * 0.05 + d2.y * 0.01) * d2.wiggle;
-        drawWavyLineOnGraphics(bgLayer, d1.x + dx1, d1.y + dy1, d2.x + dx2, d2.y + dy2);
-      }
-
-      // Render the background layer onto the main canvas.
-      image(bgLayer, 0, 0);
-
-      // Draw the centered question text (bigger font).
-      textSize(26);
+      background(255);
+      // central title
+      noStroke(); fill(0);
       textAlign(CENTER, CENTER);
-      fill(0);
-      let q = questions[currentQuestion];
-      // Center the question text in a bounding box.
-      text(q.text, width/2 - (width * 0.6)/2, height*0.15, width*0.6, 200);
+      textSize(24);
+      text("VALUES", width/2, height/2);
 
-      // Draw answer options below the question.
-      textSize(20);
-      let optionsStartY = height * 0.35;
-      let lineHeight = 60;
-      for (let i = 0; i < q.options.length; i++) {
-        let opt = q.options[i];
-        let y = optionsStartY + i * lineHeight;
-        
-        // If this option is selected, draw the animated, blurred noise glow behind it.
-        if (selected === opt) {
-          let tw = textWidth(opt);
-          let th = textAscent() + textDescent();
-          let leftX = width/2 - tw/2;
-          let topY = y - th/2;
-          push();
-            let alphaVal = 100 + 50 * sin(frameCount * 0.1);
-            drawingContext.filter = 'blur(12px)';
-            tint(255, alphaVal);
-            let xOffset = 5 * sin(frameCount * 0.1);
-            let tileCount = ceil(tw / noiseTexture.width);
-            for (let t = 0; t < tileCount; t++) {
-              image(noiseTexture, leftX + xOffset + t * noiseTexture.width, topY, noiseTexture.width, th);
-            }
-            drawingContext.filter = 'none';
-          pop();
-        }
-        fill(0);
-        text(opt, width/2, y);
+      // Update dot positions
+      for (let d of dots) {
+        let theta = frameCount * 0.005 + d.noise;
+        d.x = d.cx + cos(theta) * d.wiggle;
+        d.y = d.cy + sin(theta) * d.wiggle;
       }
-
-      // Draw feedback text below the answer options.
-      if (selected) {
-        textSize(20);
-        fill(80);
-        let feedbackY = optionsStartY + (q.options.length * lineHeight) + 20;
-        if (!isCorrect(selected)) {
-          text("Emotionally non-compliant. Compliance -10", width/2, feedbackY);
-        } else {
-          text("Fold accepted. Compliance maintained.", width/2, feedbackY);
-        }
+      // Draw organic connections
+      noFill(); stroke(0, 50); strokeWeight(1);
+      for (let c of connections) {
+        drawOrganicLine(c.a.x, c.a.y, c.b.x, c.b.y);
       }
-
-      // Display the compliance level at the bottom-left.
-      textSize(14);
-      textAlign(LEFT, TOP);
-      fill(0);
-      text("Emotional Compliance Level: " + complianceLevel + "%", 20, height - 40);
+      // Draw dots and labels
+      noStroke(); fill(0);
+      textAlign(CENTER, CENTER);
+      for (let d of dots) {
+        ellipse(d.x, d.y, 10);
+        text(d.label, d.x, d.y - 15);
+      }
     }
 
     function mousePressed() {
-      if (showResult) return;
-      let q = questions[currentQuestion];
-      let optionsStartY = height * 0.35;
-      let lineHeight = 60;
-      for (let i = 0; i < q.options.length; i++) {
-        let y = optionsStartY + i * lineHeight;
-        // Simple vertical hit detection.
-        if (mouseY > y - 15 && mouseY < y + 15) {
-          selected = q.options[i];
-          // Choose a random dot from the entire set.
-          let nextDot = floor(random(dots.length));
-          if (!isCorrect(selected)) {
-            complianceLevel -= 10;
-            connected.push({ index: nextDot, correct: false });
-          } else {
-            score++;
-            connected.push({ index: nextDot, correct: true });
+      for (let d of dots) {
+        if (dist(mouseX, mouseY, d.x, d.y) < 10) {
+          if (!expanded[d.label]) {
+            expanded[d.label] = true;
+            expandDot(d);
           }
-          // Move to the next question after a 2-second delay.
-          setTimeout(() => {
-            currentQuestion++;
-            selected = "";
-            if (currentQuestion >= questions.length) {
-              showResult = true;
-            }
-          }, 2000);
           break;
         }
       }
     }
 
-    function isCorrect(choice) {
-      return questions[currentQuestion].correct.some(c => choice.startsWith(c));
+    function generateInitialDots() {
+      const margin = 100;
+      let cx = width / 2;
+      let cy = height / 2;
+      for (let i = 0; i < words.length; i++) {
+        let baseX = random(margin, width - margin);
+        let baseY = random(margin, height - margin);
+        // ensure dots avoid center title area
+        if (dist(baseX, baseY, cx, cy) < 100) {
+          baseX += (baseX < cx ? -1 : 1) * 120;
+          baseY += (baseY < cy ? -1 : 1) * 120;
+        }
+        dots.push({ cx: baseX, cy: baseY, x: baseX, y: baseY, wiggle: random(20, 50), noise: random(1000), label: words[i] });
+      }
     }
 
-    // Create a noise texture as a p5.Graphics object.
-    function createNoiseTexture(w, h) {
-      let g = createGraphics(w, h);
-      g.noStroke();
-      g.loadPixels();
-      for (let x = 0; x < w; x++) {
-        for (let y = 0; y < h; y++) {
-          let n = noise(x * 0.05, y * 0.05) * 255;
-          g.set(x, y, color(n, n, n));
+    function expandDot(origin) {
+      const group = categories[origin.label] || [];
+      let newDots = [];
+      for (let lbl of group) {
+        let ang = random(TWO_PI);
+        // longer branch length
+        let distR = random(150, 300);
+        let baseX = origin.cx + cos(ang) * distR;
+        let baseY = origin.cy + sin(ang) * distR;
+        let d = { cx: baseX, cy: baseY, x: baseX, y: baseY, wiggle: random(10, 30), noise: random(1000), label: lbl };
+        dots.push(d);
+        connections.push({ a: origin, b: d });
+        newDots.push(d);
+      }
+      // Interconnect the new words among themselves
+      for (let i = 0; i < newDots.length; i++) {
+        for (let j = i + 1; j < newDots.length; j++) {
+          connections.push({ a: newDots[i], b: newDots[j] });
         }
       }
-      g.updatePixels();
-      return g;
     }
 
-    // Generate dots arranged in a human-like silhouette with more scattering.
-    function generateDots() {
-      dots = [];
-      let numDots = 120;
-      // Define regions for the human figure.
-      let headCenterX = width / 2;
-      let headCenterY = height / 3;
-      let headRadius = 70;
-      
-      let torsoX = width / 2 - 70;
-      let torsoY = headCenterY + 60;
-      let torsoWidth = 140;
-      let torsoHeight = 180;
-      
-      let leftArmX = width / 2 - 120;
-      let leftArmY = headCenterY + 60;
-      let leftArmWidth = 40;
-      let leftArmHeight = 140;
-      
-      let rightArmX = width / 2 + 80;
-      let rightArmY = headCenterY + 60;
-      let rightArmWidth = 40;
-      let rightArmHeight = 140;
-      
-      let leftLegX = width / 2 - 50;
-      let leftLegY = torsoY + torsoHeight;
-      let leftLegWidth = 40;
-      let leftLegHeight = 160;
-      
-      let rightLegX = width / 2 + 10;
-      let rightLegY = torsoY + torsoHeight;
-      let rightLegWidth = 40;
-      let rightLegHeight = 160;
-      
-      let headDots = int(numDots * 0.2);
-      let torsoDots = int(numDots * 0.35);
-      let armDots = int(numDots * 0.1);    // per arm
-      let legDots = int(numDots * 0.125);   // per leg
-      
-      // Head: loosely scattered.
-      for (let i = 0; i < headDots; i++) {
-        let angle = random(TWO_PI);
-        let r = random(headRadius * 0.5, headRadius);
-        let x = headCenterX + r * cos(angle);
-        let y = headCenterY + r * sin(angle);
-        dots.push({ x, y, wiggle: random(0.5, 2) });
-      }
-      
-      // Torso: further expanded range.
-      for (let i = 0; i < torsoDots; i++) {
-        let x = random(torsoX - 100, torsoX + torsoWidth + 100);
-        let y = random(torsoY - 60, torsoY + torsoHeight + 100);
-        dots.push({ x, y, wiggle: random(0.5, 2) });
-      }
-      
-      // Left arm: more scattering.
-      for (let i = 0; i < armDots; i++) {
-        let x = random(leftArmX - 100, leftArmX + leftArmWidth + 100);
-        let y = random(leftArmY - 100, leftArmY + leftArmHeight + 100);
-        dots.push({ x, y, wiggle: random(0.5, 2) });
-      }
-      
-      // Right arm.
-      for (let i = 0; i < armDots; i++) {
-        let x = random(rightArmX - 100, rightArmX + rightArmWidth + 100);
-        let y = random(rightArmY - 100, rightArmY + rightArmHeight + 100);
-        dots.push({ x, y, wiggle: random(0.5, 2) });
-      }
-      
-      // Left leg.
-      for (let i = 0; i < legDots; i++) {
-        let x = random(leftLegX - 100, leftLegX + leftLegWidth + 100);
-        let y = random(leftLegY - 60, leftLegY + leftLegHeight + 100);
-        dots.push({ x, y, wiggle: random(0.5, 2) });
-      }
-      
-      // Right leg.
-      for (let i = 0; i < legDots; i++) {
-        let x = random(rightLegX - 100, rightLegX + rightLegWidth + 100);
-        let y = random(rightLegY - 60, rightLegY + rightLegHeight + 100);
-        dots.push({ x, y, wiggle: random(0.5, 2) });
-      }
-      
-      // Reset connections starting from the first dot.
-      connected = [{ index: 0, correct: true }];
-    }
-
-    // Draw a wavy line on the provided graphics context.
-    function drawWavyLineOnGraphics(g, x1, y1, x2, y2) {
-      let segments = 20;
-      let dx = (x2 - x1) / segments;
-      let dy = (y2 - y1) / segments;
+    function drawOrganicLine(x1, y1, x2, y2) {
+      let segments = 30;
       for (let i = 0; i < segments; i++) {
-        let xStart = x1 + dx * i;
-        let yStart = y1 + dy * i;
-        let xEnd = x1 + dx * (i + 1);
-        let yEnd = y1 + dy * (i + 1);
-        let offset = sin(frameCount * 0.1 + i) * 5;
-        let angle = atan2(dy, dx) + HALF_PI;
-        let ox = cos(angle) * offset;
-        let oy = sin(angle) * offset;
-        g.line(xStart + ox, yStart + oy, xEnd + ox, yEnd + oy);
+        let t1 = i / segments;
+        let t2 = (i + 1) / segments;
+        let sx = lerp(x1, x2, t1);
+        let sy = lerp(y1, y2, t1);
+        let ex = lerp(x1, x2, t2);
+        let ey = lerp(y1, y2, t2);
+        let n = noise(i * 0.1, frameCount * 0.005);
+        let offset = map(n, 0, 1, -15, 15);
+        let ang = atan2(ey - sy, ex - sx) + HALF_PI;
+        let ox = cos(ang) * offset;
+        let oy = sin(ang) * offset;
+        line(sx + ox, sy + oy, ex + ox, ey + oy);
       }
-    }
-
-    function showFinalResult() {
-      // Overlay a semi-transparent rectangle in the center, so the dotted background is visible.
-      fill(255, 255, 255, 150);
-      let overlayX = width * 0.1;
-      let overlayY = height * 0.3;
-      let overlayW = width * 0.8;
-      let overlayH = height * 0.4;
-      rect(overlayX, overlayY, overlayW, overlayH);
-      
-      // Draw the final result text on top of the overlay.
-      textSize(26);
-      textAlign(CENTER, CENTER);
-      fill(0);
-      text("EMOTIONAL COMPLIANCE TEST COMPLETE", width / 2, height / 2 - 80);
-      textSize(22);
-      text("Score: " + score + " / " + questions.length, width / 2, height / 2 - 30);
-      text("Compliance Level: " + complianceLevel + "%", width / 2, height / 2 + 10);
-      
-      let message = "";
-      if (complianceLevel >= 90) {
-        message = "You are emotionally optimized. Reintegration authorized.";
-      } else if (complianceLevel >= 60) {
-        message = "You exhibit minor folding irregularities. Monitoring advised.";
-      } else {
-        message = "Folding failure detected. Please report for further evaluation.";
-      }
-      text(message, width / 2, height / 2 + 60, overlayW);
     }
 
     function windowResized() {
       resizeCanvas(windowWidth, windowHeight);
-      bgLayer.resizeCanvas(windowWidth, windowHeight);
-      generateDots();
+      dots = [];
+      connections = [];
+      expanded = {};
+      generateInitialDots();
     }
   </script>
 </body>
