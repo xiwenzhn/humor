@@ -5,78 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Relational Values Diagram</title>
   <style>
-    @font-face {
-      font-family: 'ABCDiatypeCondensed-Regular-Trial';
-      src: url('ABCDiatypeCondensed-Regular-Trial.otf') format('opentype');
-      font-weight: normal;
-      font-style: normal;
+    /* Fallback for body text */
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: sans-serif;
     }
-
-    html, body { margin: 0; padding: 0; overflow: hidden; font-family: "ABCDiatypeCondensed-Regular-Trial", sans-serif; }
     canvas { display: block; }
   </style>
 </head>
 <body>
+  <!-- p5.js library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
   <script>
-    // Category to sub-values mapping
     const categories = {
-      Conditional: [
-        "Discretion",
-        "Privacy",
-        "Access and visibilities",
-        "Withholding",
-        "Susceptible to change",
-        "Ambivalence"
-      ],
-      Periodical: [
-        "Introspection",
-        "Attentions",
-        "Active participation"
-      ],
-      Incidental: [
-        "Instabilities",
-        "Chaos",
-        "Agitation",
-        "Disruptions",
-        "Confrontations",
-        "Turbulent",
-        "Improvisation"
-      ],
-      Subversive: [
-        "Resistance",
-        "Friction",
-        "Criticality",
-        "Candidness"
-      ],
-      Inherent: [
-        "Adaptive",
-        "Agile",
-        "Intuition",
-        "Independence",
-        "Ambiguity"
-      ],
-      Relational: [
-        "Dependency",
-        "Reciprocity",
-        "Intimacy",
-        "Vulnerability"
-      ],
-      Situational: [
-        "Liminality",
-        "Paradoxes",
-        "Observant"
-      ]
+      Conditional: ["Discretion","Privacy","Access and visibilities","Withholding","Susceptible to change","Ambivalence"],
+      Periodical: ["Introspection","Attentions","Active participation"],
+      Incidental: ["Instabilities","Chaos","Agitation","Disruptions","Confrontations","Turbulent","Improvisation"],
+      Subversive: ["Resistance","Friction","Criticality","Candidness"],
+      Inherent: ["Adaptive","Agile","Intuition","Independence","Ambiguity"],
+      Relational: ["Dependency","Reciprocity","Intimacy","Vulnerability"],
+      Situational: ["Liminality","Paradoxes","Observant"]
     };
 
     let words = [];
     let dots = [];
     let connections = [];
     let expanded = {};
+    let aldine;
+
+    // Load your custom font before setup
+    function preload() {
+      aldine = loadFont('Aldine721 BT 400.ttf');
+    }
 
     function setup() {
       createCanvas(windowWidth, windowHeight);
-      textFont("Arial Rounded MT Bold", 16);
+      textFont(aldine);
+      textSize(16);
       noiseDetail(2, 0.5);
       words = Object.keys(categories);
       generateInitialDots();
@@ -84,26 +51,31 @@
 
     function draw() {
       background(255);
-      // central title
-      noStroke(); fill(0);
+      noStroke();
+      fill(0);
       textAlign(CENTER, CENTER);
       textSize(24);
-      text("VALUES", width/2, height/2);
+      text('VALUES', width/2, height/2);
 
-      // Update dot positions
+      // animate dots
       for (let d of dots) {
-        let theta = frameCount * 0.005 + d.noise;
-        d.x = d.cx + cos(theta) * d.wiggle;
-        d.y = d.cy + sin(theta) * d.wiggle;
+        let t = frameCount * 0.005 + d.noise;
+        d.x = d.cx + cos(t) * d.wiggle;
+        d.y = d.cy + sin(t) * d.wiggle;
       }
-      // Draw organic connections
-      noFill(); stroke(0, 50); strokeWeight(1);
+
+      // draw connections
+      noFill();
+      stroke(0, 50);
+      strokeWeight(1);
       for (let c of connections) {
         drawOrganicLine(c.a.x, c.a.y, c.b.x, c.b.y);
       }
-      // Draw dots and labels
-      noStroke(); fill(0);
-      textAlign(CENTER, CENTER);
+
+      // draw dots and labels
+      noStroke();
+      fill(0);
+      textSize(16);
       for (let d of dots) {
         ellipse(d.x, d.y, 10);
         text(d.label, d.x, d.y - 15);
@@ -112,11 +84,9 @@
 
     function mousePressed() {
       for (let d of dots) {
-        if (dist(mouseX, mouseY, d.x, d.y) < 10) {
-          if (!expanded[d.label]) {
-            expanded[d.label] = true;
-            expandDot(d);
-          }
+        if (dist(mouseX, mouseY, d.x, d.y) < 10 && !expanded[d.label]) {
+          expanded[d.label] = true;
+          expandDot(d);
           break;
         }
       }
@@ -124,35 +94,38 @@
 
     function generateInitialDots() {
       const margin = 100;
-      let cx = width / 2;
-      let cy = height / 2;
-      for (let i = 0; i < words.length; i++) {
-        let baseX = random(margin, width - margin);
-        let baseY = random(margin, height - margin);
-        // ensure dots avoid center title area
-        if (dist(baseX, baseY, cx, cy) < 100) {
-          baseX += (baseX < cx ? -1 : 1) * 120;
-          baseY += (baseY < cy ? -1 : 1) * 120;
+      let cx = width/2, cy = height/2;
+      for (let w of words) {
+        let bx = random(margin, width - margin);
+        let by = random(margin, height - margin);
+        if (dist(bx, by, cx, cy) < 100) {
+          bx += (bx < cx ? -1 : 1) * 120;
+          by += (by < cy ? -1 : 1) * 120;
         }
-        dots.push({ cx: baseX, cy: baseY, x: baseX, y: baseY, wiggle: random(20, 50), noise: random(1000), label: words[i] });
+        dots.push({ cx: bx, cy: by, x: bx, y: by, wiggle: random(20, 50), noise: random(1000), label: w });
       }
     }
 
     function expandDot(origin) {
-      const group = categories[origin.label] || [];
       let newDots = [];
-      for (let lbl of group) {
+      let arr = categories[origin.label] || [];
+      for (let lbl of arr) {
         let ang = random(TWO_PI);
-        // longer branch length
         let distR = random(150, 300);
-        let baseX = origin.cx + cos(ang) * distR;
-        let baseY = origin.cy + sin(ang) * distR;
-        let d = { cx: baseX, cy: baseY, x: baseX, y: baseY, wiggle: random(10, 30), noise: random(1000), label: lbl };
+        let bx = origin.cx + cos(ang) * distR;
+        let by = origin.cy + sin(ang) * distR;
+        let d = {
+          cx: bx, cy: by,
+          x: bx, y: by,
+          wiggle: random(10, 30),
+          noise: random(1000),
+          label: lbl
+        };
         dots.push(d);
         connections.push({ a: origin, b: d });
         newDots.push(d);
       }
-      // Interconnect the new words among themselves
+      // interconnect new dots
       for (let i = 0; i < newDots.length; i++) {
         for (let j = i + 1; j < newDots.length; j++) {
           connections.push({ a: newDots[i], b: newDots[j] });
@@ -161,19 +134,15 @@
     }
 
     function drawOrganicLine(x1, y1, x2, y2) {
-      let segments = 30;
-      for (let i = 0; i < segments; i++) {
-        let t1 = i / segments;
-        let t2 = (i + 1) / segments;
-        let sx = lerp(x1, x2, t1);
-        let sy = lerp(y1, y2, t1);
-        let ex = lerp(x1, x2, t2);
-        let ey = lerp(y1, y2, t2);
+      const seg = 30;
+      for (let i = 0; i < seg; i++) {
+        let t1 = i/seg, t2 = (i+1)/seg;
+        let sx = lerp(x1, x2, t1), sy = lerp(y1, y2, t1);
+        let ex = lerp(x1, x2, t2), ey = lerp(y1, y2, t2);
         let n = noise(i * 0.1, frameCount * 0.005);
-        let offset = map(n, 0, 1, -15, 15);
-        let ang = atan2(ey - sy, ex - sx) + HALF_PI;
-        let ox = cos(ang) * offset;
-        let oy = sin(ang) * offset;
+        let off = map(n, 0, 1, -15, 15);
+        let a = atan2(ey - sy, ex - sx) + HALF_PI;
+        let ox = cos(a) * off, oy = sin(a) * off;
         line(sx + ox, sy + oy, ex + ox, ey + oy);
       }
     }
